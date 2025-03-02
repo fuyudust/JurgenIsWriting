@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình chỉnh sửa truyện</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #7c7c7c;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .toolbar select {
+            padding: 5px;
+        }
+
+        .content-container {
+            margin-top: 60px;
+            padding: 10px;
+        }
+
+
+        .content-item {
+            border: 1px solid #ffffff;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+
+        /* Định dạng chung cho text hiển thị và textarea */
+        .text-field {
+            font-family: inherit;
+            font-size: 16px;
+            text-align: justify;
+            width: 100%;
+            display: inline-block;
+        }
+
+        /* Đảm bảo không bị tràn viền */
+        .display-field,
+        .edit-field {
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Phần tóm tắt nội dung: màu đỏ, không bold */
+        .summary-text {
+            color: red;
+            font-weight: normal;
+        }
+
+        /* Phần nội dung chính: màu đen, không bold, thụt vào */
+        .main-text {
+            color: black;
+            font-weight: normal;
+            margin-left: 20px;
+            box-sizing: border-box;
+            width: calc(100% - 20px);
+        }
+
+        .display-field {
+            padding: 5px;
+            min-height: 40px;
+            border: 1px solid transparent;
+        }
+
+        .display-field:hover {
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .edit-field {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            resize: none;
+            overflow: hidden;
+            min-height: 40px;
+            border: 1px solid #ddd;
+        }
+
+.summary-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-display {
+    order: 2;
+}
+.numbering {
+    order: 1;
+    display: inline-block;
+    width: 30px; /* Điều chỉnh theo nhu cầu */
+    text-align: right;
+    margin-right: 10px;
+    color: rgb(199, 199, 199);
+    font-weight: bold;
+    font-size: 25px; /* thay đổi kích thước font */
+    font-family: 'courier new' /* thay đổi font, ví dụ Arial */
+}
+        .main-container {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDA1nw4icbTTk4XMnGMbTvE7gm0_jqDpvs",
+            authDomain: "jurgeniswriting.firebaseapp.com",
+            projectId: "jurgeniswriting",
+            storageBucket: "jurgeniswriting.firebasestorage.app",
+            messagingSenderId: "262285148656",
+            appId: "1:262285148656:web:9966aa3b976d7f1d8e5d35"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Cập nhật dropdown cho lựa chọn phạm vi đọc
+        function updateDropdowns() {
+            const contentList = document.getElementById("contentList").children;
+            const startRead = document.getElementById("startRead");
+            const endRead = document.getElementById("endRead");
+            startRead.innerHTML = "";
+            endRead.innerHTML = "";
+
+            for (let i = 0; i < contentList.length; i++) {
+                const option = document.createElement("option");
+                option.value = i + 1;
+                option.textContent = i + 1;
+                startRead.appendChild(option.cloneNode(true));
+                endRead.appendChild(option);
+            }
+        }
+
+        // Thêm một content-item mới
+        window.addContent = function () {
+            const contentList = document.getElementById("contentList");
+            const index = contentList.children.length + 1;
+            const contentItem = document.createElement("div");
+            contentItem.className = "content-item";
+            contentItem.innerHTML = `
+   
+        <div class="summary-container">
+        <span class="numbering">${index}</span>
+        <span class="display-field text-field summary-display summary-text" 
+                ondblclick="enterEdit(this, 'summary')" 
+                onclick="toggleMain(this)">
+            [Nhấn vào đây để xem chi tiết] 
+        </span>
+
+          <textarea class="edit-field text-field summary-edit summary-text" style="display:none;" 
+                    onblur="exitEdit(this, 'summary')" 
+                    oninput="autoResize(this)"></textarea>
+        </div>
+        
+        <div class="main-container" style="display: none;">
+          <span class="display-field text-field main-display main-text" 
+                ondblclick="enterEdit(this, 'main')">
+            [Nội dung chính trống]
+          </span>
+          <textarea class="edit-field text-field main-edit main-text" style="display:none;" 
+                    onblur="exitEdit(this, 'main')" 
+                    oninput="autoResize(this)"></textarea>
+        </div>
+      `;
+            contentList.appendChild(contentItem);
+            updateDropdowns();
+        };
+
+        // Chuyển sang chế độ chỉnh sửa khi nhấn đúp vào vùng hiển thị
+        window.enterEdit = function (displayElem, field) {
+            const contentItem = displayElem.closest(".content-item");
+            const editElem = contentItem.querySelector(`.${field}-edit`);
+            // Đưa nội dung từ display vào textarea (nếu placeholder thì set rỗng)
+            editElem.value = (displayElem.textContent.includes("[") && displayElem.textContent.includes("]"))
+                ? ""
+                : displayElem.textContent;
+            displayElem.style.display = "none";
+            editElem.style.display = "block";
+            editElem.focus();
+            autoResize(editElem);
+        };
+
+        // Thoát chế độ chỉnh sửa khi mất focus, lưu nội dung vừa chỉnh sửa
+        window.exitEdit = async function (editElem, field) {
+            const contentItem = editElem.closest(".content-item");
+            const displayElem = contentItem.querySelector(`.${field}-display`);
+            let newValue = editElem.value.trim();
+            if (newValue === "") {
+                newValue = field === 'summary'
+                    ? "[Nhấn vào đây để xem chi tiết]"
+                    : "[Nội dung chính trống]";
+            }
+            displayElem.textContent = newValue;
+            await saveToFirebase()
+            editElem.style.display = "none";
+            displayElem.style.display = "inline-block";
+        };
+
+        // Tự động điều chỉnh chiều cao của textarea theo nội dung
+        window.autoResize = function (element) {
+            element.style.height = "auto";
+            element.style.height = (element.scrollHeight) + "px";
+        };
+
+        // Toggle hiển thị phần "Nội dung chính" khi nhấp vào vùng tóm tắt
+        window.toggleMain = function (summaryElem) {
+            const contentItem = summaryElem.closest(".content-item");
+            const mainContainer = contentItem.querySelector(".main-container");
+            if (mainContainer.style.display === "none" || mainContainer.style.display === "") {
+                mainContainer.style.display = "block";
+            } else {
+                mainContainer.style.display = "none";
+            }
+        };
+
+        // Đọc nội dung của các content-item được chọn theo dropdown
+        window.readText = function () {
+            const start = parseInt(document.getElementById("startRead").value);
+            const end = parseInt(document.getElementById("endRead").value);
+            const contentList = document.getElementById("contentList").children;
+            let combinedText = "";
+
+            for (let i = start - 1; i < end && i < contentList.length; i++) {
+                const contentItem = contentList[i];
+                const mainDisplay = contentItem.querySelector(".main-display");
+                const mainEdit = contentItem.querySelector(".main-edit");
+                let text = "";
+                if (mainDisplay && mainDisplay.style.display !== "none") {
+                    text = mainDisplay.textContent;
+                } else if (mainEdit) {
+                    text = mainEdit.value;
+                }
+                if (text.trim() !== "") combinedText += text + ". ";
+            }
+
+            if (combinedText) {
+                const speech = new SpeechSynthesisUtterance(combinedText);
+                speech.lang = "vi-VN";
+                window.speechSynthesis.speak(speech);
+            }
+        };
+
+        // Nút "Đọc To" gọi hàm readText
+        window.readAll = function () {
+            readText();
+        };
+
+        // Nút "Dừng Đọc To" hủy bỏ giọng đọc
+        window.stopReading = function () {
+            window.speechSynthesis.cancel();
+        };
+
+        // Lưu nội dung vào Firebase
+        window.saveToFirebase = async function () {
+            const contentList = document.getElementById("contentList").children;
+            const stories = [];
+
+            for (let i = 0; i < contentList.length; i++) {
+                const summaryDisplay = contentList[i].querySelector(".summary-display");
+                const mainDisplay = contentList[i].querySelector(".main-display");
+                stories.push({
+                    id: i + 1,
+                    summary: (summaryDisplay.textContent.includes("[") && summaryDisplay.textContent.includes("]"))
+                        ? ""
+                        : summaryDisplay.textContent,
+                    content: (mainDisplay.textContent.includes("[") && mainDisplay.textContent.includes("]"))
+                        ? ""
+                        : mainDisplay.textContent
+                });
+            }
+
+            try {
+                await setDoc(doc(db, "stories", "chapter1"), { contents: stories });
+                try {
+                    await setDoc(doc(db, "stories", "chapter1"), { contents: stories });
+                    showToast("Lưu thành công!");
+                } catch (error) {
+                    console.error("Error saving data:", error);
+                    showToast("Có lỗi khi lưu dữ liệu!");
+                }
+
+            } catch (error) {
+                console.error("Error saving data:", error);
+                alert("Có lỗi khi lưu dữ liệu!");
+            }
+        };
+
+        // Tải nội dung từ Firebase và hiển thị lại
+        window.loadFromFirebase = async function () {
+            try {
+                const docRef = doc(db, "stories", "chapter1");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    document.getElementById("contentList").innerHTML = "";
+                    docSnap.data().contents.forEach((item) => {
+                        addContent();
+                        const contentItem = document.getElementById("contentList").lastChild;
+                        contentItem.querySelector(".summary-display").textContent = item.summary || "[Nhấn vào đây để xem chi tiết]";
+                        contentItem.querySelector(".main-display").textContent = item.content || "[Nội dung chính trống]";
+                    });
+                    updateDropdowns();
+                } else {
+                    console.log("No data found!");
+                }
+            } catch (error) {
+                console.error("Error loading data:", error);
+                alert("Có lỗi khi tải dữ liệu!");
+            }
+        };
+
+        // Tự động tải dữ liệu khi trang được load
+        document.addEventListener("DOMContentLoaded", function () {
+            loadFromFirebase();
+        });
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.style.display = "block";
+            // Ẩn toast sau 3 giây
+            setTimeout(() => {
+                toast.style.display = "none";
+            }, 3000);
+        }
+
+    </script>
+</head>
+
+<body>
+    <div class="toolbar">
+        <label>Chương: <select id="chapterSelect"></select></label>
+        <button onclick="readAll()">Đọc To</button>
+        <select id="startRead"></select>
+        <span>-</span>
+        <select id="endRead"></select>
+        <button onclick="stopReading()">Dừng Đọc</button>
+        <button onclick="saveToFirebase()">Lưu</button>
+        <button onclick="loadFromFirebase()">Tải</button>
+    </div>
+
+    <div id="toast"
+        style="position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 10px 20px; border-radius: 4px; display: none; z-index: 2000;">
+    </div>
+
+    <div class="content-container" id="contentList"></div>
+    <button onclick="addContent()">+</button>
+</body>
+
+</html>
