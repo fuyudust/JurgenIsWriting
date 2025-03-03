@@ -38,8 +38,8 @@
 
         .content-item {
             border: 1px solid #ffffff;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 1px;
+            margin-bottom: 1px;
             background: #fff;
         }
 
@@ -67,10 +67,10 @@
         }
 
         .main-display {
-  white-space: pre-wrap;
-  line-height: 1;  
+            white-space: pre-wrap;
+            line-height: 2;
 
-}
+        }
 
 
         /* Phần nội dung chính: màu đen, không bold, thụt vào */
@@ -103,27 +103,32 @@
             border: 1px solid #ddd;
         }
 
-.summary-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        .summary-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.summary-display {
-    order: 2;
-}
-.numbering {
-    order: 1;
-    display: inline-block;
-    width: 30px; /* Điều chỉnh theo nhu cầu */
-    text-align: right;
-    margin-right: 10px;
-    color: rgb(199, 199, 199);
-    font-weight: bold;
-    font-size: 25px; /* thay đổi kích thước font */
-    font-family: 'courier new'; /* thay đổi font, ví dụ Arial */
-    cursor: pointer;
-}
+        .summary-display {
+            order: 2;
+        }
+
+        .numbering {
+            order: 1;
+            display: inline-block;
+            width: 30px;
+            /* Điều chỉnh theo nhu cầu */
+            text-align: right;
+            margin-right: 10px;
+            color: rgb(199, 199, 199);
+            font-weight: bold;
+            font-size: 25px;
+            /* thay đổi kích thước font */
+            font-family: 'courier new';
+            /* thay đổi font, ví dụ Arial */
+            cursor: pointer;
+        }
+
         .main-container {
             margin: 0;
             padding: 0;
@@ -171,7 +176,7 @@
             contentItem.innerHTML = `
    
         <div class="summary-container">
-        <span class="numbering" ondblclick="deleteContentItem(this)">${index}</span>
+        <span class="numbering" onclick="copySummary(this)" ondblclick="deleteContentItem(this)">${index}</span>
         <span class="display-field text-field summary-display summary-text" 
                 ondblclick="enterEdit(this, 'summary')" 
                 onclick="toggleMain(this)">
@@ -245,37 +250,37 @@
         };
 
         // Đọc nội dung của các content-item được chọn theo dropdown
-        window.readText = function() {
-  const start = parseInt(document.getElementById("startRead").value);
-  const end = parseInt(document.getElementById("endRead").value);
-  const contentList = document.getElementById("contentList").children;
-  let combinedText = "";
-  
-  for (let i = start - 1; i < end && i < contentList.length; i++) {
-    const contentItem = contentList[i];
-    const mainDisplay = contentItem.querySelector(".main-display");
-    const mainEdit = contentItem.querySelector(".main-edit");
-    let text = "";
-    if (mainDisplay && mainDisplay.style.display !== "none") {
-      text = mainDisplay.textContent;
-    } else if (mainEdit) {
-      text = mainEdit.value;
-    }
-    if (text.trim() !== "") combinedText += text + ". ";
-  }
-  
-  if (combinedText) {
-    // Hủy bỏ bất kỳ utterance nào đang chạy
-    window.speechSynthesis.cancel();
-    
-    const speech = new SpeechSynthesisUtterance(combinedText);
-    speech.lang = "en-US"; // hoặc "vi-VN" nếu cần
-    speech.onend = function() {
-      console.log("Đã hoàn thành đọc");
-    };
-    window.speechSynthesis.speak(speech);
-  }
-};
+        window.readText = function () {
+            const start = parseInt(document.getElementById("startRead").value);
+            const end = parseInt(document.getElementById("endRead").value);
+            const contentList = document.getElementById("contentList").children;
+            let combinedText = "";
+
+            for (let i = start - 1; i < end && i < contentList.length; i++) {
+                const contentItem = contentList[i];
+                const mainDisplay = contentItem.querySelector(".main-display");
+                const mainEdit = contentItem.querySelector(".main-edit");
+                let text = "";
+                if (mainDisplay && mainDisplay.style.display !== "none") {
+                    text = mainDisplay.textContent;
+                } else if (mainEdit) {
+                    text = mainEdit.value;
+                }
+                if (text.trim() !== "") combinedText += text + ". ";
+            }
+
+            if (combinedText) {
+                // Hủy bỏ bất kỳ utterance nào đang chạy
+                window.speechSynthesis.cancel();
+
+                const speech = new SpeechSynthesisUtterance(combinedText);
+                speech.lang = "en-US"; // hoặc "vi-VN" nếu cần
+                speech.onend = function () {
+                    console.log("Đã hoàn thành đọc");
+                };
+                window.speechSynthesis.speak(speech);
+            }
+        };
 
         // Nút "Đọc To" gọi hàm readText
         window.readAll = function () {
@@ -360,30 +365,63 @@
             }, 3000);
         }
 
-        window.deleteContentItem = function(numberingElem) {
-  // Xác nhận người dùng có muốn xóa không (có thể bỏ qua bước này nếu không cần)
-  if (!confirm("Bạn có chắc muốn xóa phần này không?")) return;
-  
-  // Lấy phần tử content-item chứa số thứ tự vừa nhấn đúp
-  const contentItem = numberingElem.closest(".content-item");
-  if (contentItem) {
-    contentItem.remove();
-  }
-  // Cập nhật lại số thứ tự cho các phần tử còn lại
-  updateNumbering();
-  // Cập nhật dropdown nếu cần
-  updateDropdowns();
-};
+        
 
-window.updateNumbering = function() {
-  const contentItems = document.querySelectorAll(".content-item");
-  contentItems.forEach((item, index) => {
-    const numbering = item.querySelector(".numbering");
-    if (numbering) {
-      numbering.textContent = (index + 1) + ".";
-    }
-  });
-};
+        window.copySummary = function (numberingElem) {
+            const contentItem = numberingElem.closest(".content-item");
+            const summaryDisplay = contentItem.querySelector(".summary-display");
+            const textToCopy = summaryDisplay.textContent.trim();  // Lấy nội dung văn bản để copy
+
+            // Sử dụng Clipboard API để sao chép văn bản
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    showToast("Đã copy nội dung summary!");  // Thông báo thành công
+                })
+                .catch(err => {
+                    console.error("Lỗi khi copy: ", err);  // Xử lý lỗi
+                    showToast("Lỗi khi copy nội dung!");
+                });
+        };
+
+
+        window.deleteContentItem = function (numberingElem) {
+            // Xác nhận người dùng có muốn xóa không (có thể bỏ qua bước này nếu không cần)
+            if (!confirm("Bạn có chắc muốn xóa phần này không?")) return;
+
+            // Lấy phần tử content-item chứa số thứ tự vừa nhấn đúp
+            const contentItem = numberingElem.closest(".content-item");
+            if (contentItem) {
+                contentItem.remove();
+            }
+            // Cập nhật lại số thứ tự cho các phần tử còn lại
+            updateNumbering();
+            // Cập nhật dropdown nếu cần
+            updateDropdowns();
+        };
+
+
+        window.updateNumbering = function () {
+            const contentItems = document.querySelectorAll(".content-item");
+            contentItems.forEach((item, index) => {
+                const numbering = item.querySelector(".numbering");
+                if (numbering) {
+                    numbering.textContent = (index + 1) + ".";
+                }
+            });
+        };
+
+        function copySummary(numberingElem) {
+            const contentItem = numberingElem.closest(".content-item");
+            // Lấy nội dung summary (bỏ qua các thẻ HTML nếu có)
+            const summaryText = contentItem.querySelector(".summary-display").textContent.trim();
+            navigator.clipboard.writeText(summaryText)
+                .then(() => {
+                    showToast("Đã copy nội dung summary!");
+                })
+                .catch(err => {
+                    console.error("Lỗi khi copy: ", err);
+                });
+        }
 
 
     </script>
