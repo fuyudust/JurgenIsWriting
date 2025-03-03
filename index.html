@@ -6,24 +6,141 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trình chỉnh sửa truyện</title>
     <style>
+        :root {
+            --bcolor: #cfcaa9;
+            /* Màu xanh lá bạn chọn */
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
         }
 
+        .sound-toggle.active {
+            animation: pulse-animation 1s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            /* Đặt vị trí xuất hiện của toast ở cuối trang */
+            left: 50%;
+            /* Căn giữa toast theo chiều ngang */
+            transform: translateX(-50%);
+            /* Đưa về giữa màn hình */
+            background-color: var(--bcolor);
+            /* Màu nền tối */
+            color: white;
+            /* Màu chữ sáng */
+            padding: 10px 20px;
+            /* Padding cho nội dung bên trong */
+            border-radius: 5px;
+            /* Bo góc */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            /* Thêm bóng đổ */
+            z-index: 2000;
+            /* Đảm bảo toast luôn hiển thị trên cùng */
+            display: none;
+            /* Bắt đầu với trạng thái ẩn */
+        }
+
+        .save-button {
+            background-color: var(--bcolor);
+            /* Màu nền xanh */
+            color: white;
+            /* Màu chữ trắng */
+            border: 2px solid var(--bcolor);
+            /* Màu viền xanh đậm */
+            font-size: 24px;
+            /* Kích thước chữ */
+            cursor: pointer;
+            padding: 0px 0px;
+            /* Đệm để tăng kích thước và khoảng không cho nút */
+            border-radius: 5px;
+            /* Bo tròn góc */
+            transition: all 0.3s ease;
+            /* Chuyển tiếp mượt cho các thay đổi trạng thái */
+        }
+
+
+        .sound-toggle {
+            background-color: var(--bcolor);
+            /* Màu nền xanh */
+            color: white;
+            /* Màu chữ trắng */
+            border: 2px solid var(--bcolor);
+            /* Màu viền xanh đậm */
+            font-size: 24px;
+            /* Kích thước chữ */
+            cursor: pointer;
+            padding: 0px 0px;
+            /* Đệm để tăng kích thước và khoảng không cho nút */
+            border-radius: 5px;
+            /* Bo tròn góc */
+            transition: all 0.3s ease;
+            /* Chuyển tiếp mượt cho các thay đổi trạng thái */
+        }
+
+        .sound-toggle:hover {
+            background-color: var(--bcolor);
+            /* Thay đổi màu nền khi hover */
+        }
+
+        .sound-toggle.active {
+            animation: pulse-animation 1s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+
+
         .toolbar {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            background: #7c7c7c;
-            padding: 10px;
+            background: var(--bcolor);
+            padding: 5px;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
             z-index: 1000;
             border-bottom: 1px solid #ddd;
+
         }
 
         .toolbar select {
@@ -32,7 +149,17 @@
 
         .content-container {
             margin-top: 60px;
+            /* Giữ nguyên khoảng cách phía trên */
             padding: 10px;
+            /* Giữ nguyên padding cho nội dung bên trong */
+            width: 80%;
+            /* Xác định rộng tương đối cho container */
+            margin-left: auto;
+            /* Căn giữa ngang bằng cách tự động điều chỉnh lề trái */
+            margin-right: auto;
+            /* và lề phải */
+            box-sizing: border-box;
+            /* Đảm bảo rằng padding không ảnh hưởng tới chiều rộng tổng */
         }
 
 
@@ -62,7 +189,7 @@
 
         /* Phần tóm tắt nội dung: màu đỏ, không bold */
         .summary-text {
-            color: red;
+            color: rgb(44, 149, 219);
             font-weight: normal;
         }
 
@@ -120,7 +247,7 @@
             /* Điều chỉnh theo nhu cầu */
             text-align: right;
             margin-right: 10px;
-            color: rgb(199, 199, 199);
+            color: rgb(205, 229, 235);
             font-weight: bold;
             font-size: 25px;
             /* thay đổi kích thước font */
@@ -200,6 +327,7 @@
       `;
             contentList.appendChild(contentItem);
             updateDropdowns();
+            saveToFirebase()
         };
 
         // Chuyển sang chế độ chỉnh sửa khi nhấn đúp vào vùng hiển thị
@@ -248,9 +376,17 @@
                 mainContainer.style.display = "none";
             }
         };
+        let isReading = false;
 
-        // Đọc nội dung của các content-item được chọn theo dropdown
-        window.readText = function () {
+        function toggleSound() {
+            if (!isReading) {
+                readAll();
+            } else {
+                stopReading();
+            }
+        }
+        // Đọc nội dung đã chọn
+        window.readAll = function () {
             const start = parseInt(document.getElementById("startRead").value);
             const end = parseInt(document.getElementById("endRead").value);
             const contentList = document.getElementById("contentList").children;
@@ -270,9 +406,7 @@
             }
 
             if (combinedText) {
-                // Hủy bỏ bất kỳ utterance nào đang chạy
                 window.speechSynthesis.cancel();
-
                 const speech = new SpeechSynthesisUtterance(combinedText);
                 speech.lang = "en-US"; // hoặc "vi-VN" nếu cần
                 speech.onend = function () {
@@ -282,15 +416,25 @@
             }
         };
 
-        // Nút "Đọc To" gọi hàm readText
-        window.readAll = function () {
-            readText();
-        };
-
-        // Nút "Dừng Đọc To" hủy bỏ giọng đọc
+        // Hàm dừng đọc
         window.stopReading = function () {
             window.speechSynthesis.cancel();
         };
+
+        // Chuyển đổi giữa đọc và dừng
+        window.toggleSound = function () {
+            const button = document.querySelector(".sound-toggle");
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                button.classList.remove("active");
+
+            } else {
+                readAll();
+                button.classList.add("active");
+
+            }
+        };
+
 
         // Lưu nội dung vào Firebase
         window.saveToFirebase = async function () {
@@ -315,7 +459,7 @@
                 await setDoc(doc(db, "stories", "chapter1"), { contents: stories });
                 try {
                     await setDoc(doc(db, "stories", "chapter1"), { contents: stories });
-                    showToast("Lưu thành công!");
+                    showToast("Saved!");
                 } catch (error) {
                     console.error("Error saving data:", error);
                     showToast("Có lỗi khi lưu dữ liệu!");
@@ -362,10 +506,10 @@
             // Ẩn toast sau 3 giây
             setTimeout(() => {
                 toast.style.display = "none";
-            }, 3000);
+            }, 1000);
         }
 
-        
+
 
         window.copySummary = function (numberingElem) {
             const contentItem = numberingElem.closest(".content-item");
@@ -406,6 +550,7 @@
                 const numbering = item.querySelector(".numbering");
                 if (numbering) {
                     numbering.textContent = (index + 1) + ".";
+                    saveToFirebase()
                 }
             });
         };
@@ -423,28 +568,33 @@
                 });
         }
 
+        window.addEventListener('beforeunload', function (event) {
+            // Dừng mọi hoạt động tổng hợp giọng nói
+            window.speechSynthesis.cancel();
+        });
+
 
     </script>
 </head>
 
 <body>
+
     <div class="toolbar">
         <label>Chương: <select id="chapterSelect"></select></label>
-        <button onclick="readAll()">Đọc To</button>
+        <button onclick="saveToFirebase()" class="save-button">💾</button>
+        <button onclick="toggleSound()" class="sound-toggle">💬</button>
+
         <select id="startRead"></select>
         <span>-</span>
         <select id="endRead"></select>
-        <button onclick="stopReading()">Dừng Đọc</button>
-        <button onclick="saveToFirebase()">Lưu</button>
-        <button onclick="loadFromFirebase()">Tải</button>
     </div>
 
-    <div id="toast"
-        style="position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 10px 20px; border-radius: 4px; display: none; z-index: 2000;">
+    <div id="toast">
     </div>
 
     <div class="content-container" id="contentList"></div>
     <button onclick="addContent()">+</button>
+
 </body>
 
 </html>
