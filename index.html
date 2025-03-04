@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +7,6 @@
     <style>
         :root {
             --bcolor: #cfcaa9;
-            /* Màu xanh lá bạn chọn */
         }
 
         body {
@@ -22,110 +20,54 @@
         }
 
         @keyframes pulse-animation {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.2);
-                opacity: 0.5;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         #toast {
             position: fixed;
             bottom: 20px;
-            /* Đặt vị trí xuất hiện của toast ở cuối trang */
             left: 50%;
-            /* Căn giữa toast theo chiều ngang */
             transform: translateX(-50%);
-            /* Đưa về giữa màn hình */
             background-color: var(--bcolor);
-            /* Màu nền tối */
             color: white;
-            /* Màu chữ sáng */
             padding: 10px 20px;
-            /* Padding cho nội dung bên trong */
             border-radius: 5px;
-            /* Bo góc */
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            /* Thêm bóng đổ */
             z-index: 2000;
-            /* Đảm bảo toast luôn hiển thị trên cùng */
             display: none;
-            /* Bắt đầu với trạng thái ẩn */
         }
 
-        .save-button {
+        .toolbar-button {
             background-color: var(--bcolor);
-            /* Màu nền xanh */
             color: white;
-            /* Màu chữ trắng */
             border: 2px solid var(--bcolor);
-            /* Màu viền xanh đậm */
-            font-size: 24px;
-            /* Kích thước chữ */
+            font-size: 14px;
             cursor: pointer;
-            padding: 0px 0px;
-            /* Đệm để tăng kích thước và khoảng không cho nút */
+            padding: 2px 5px;
             border-radius: 5px;
-            /* Bo tròn góc */
             transition: all 0.3s ease;
-            /* Chuyển tiếp mượt cho các thay đổi trạng thái */
         }
 
-
-        .sound-toggle {
+        .save-button, .sound-toggle {
             background-color: var(--bcolor);
-            /* Màu nền xanh */
             color: white;
-            /* Màu chữ trắng */
             border: 2px solid var(--bcolor);
-            /* Màu viền xanh đậm */
             font-size: 24px;
-            /* Kích thước chữ */
             cursor: pointer;
             padding: 0px 0px;
-            /* Đệm để tăng kích thước và khoảng không cho nút */
             border-radius: 5px;
-            /* Bo tròn góc */
             transition: all 0.3s ease;
-            /* Chuyển tiếp mượt cho các thay đổi trạng thái */
         }
 
         .sound-toggle:hover {
             background-color: var(--bcolor);
-            /* Thay đổi màu nền khi hover */
         }
 
         .sound-toggle.active {
             animation: pulse-animation 1s infinite;
         }
-
-        @keyframes pulse-animation {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.2);
-                opacity: 0.5;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-
 
         .toolbar {
             position: fixed;
@@ -140,7 +82,6 @@
             gap: 10px;
             z-index: 1000;
             border-bottom: 1px solid #ddd;
-
         }
 
         .toolbar select {
@@ -149,19 +90,12 @@
 
         .content-container {
             margin-top: 60px;
-            /* Giữ nguyên khoảng cách phía trên */
             padding: 10px;
-            /* Giữ nguyên padding cho nội dung bên trong */
             width: 95%;
-            /* Xác định rộng tương đối cho container */
             margin-left: auto;
-            /* Căn giữa ngang bằng cách tự động điều chỉnh lề trái */
             margin-right: auto;
-            /* và lề phải */
             box-sizing: border-box;
-            /* Đảm bảo rằng padding không ảnh hưởng tới chiều rộng tổng */
         }
-
 
         .content-item {
             border: 1px solid #ffffff;
@@ -170,7 +104,6 @@
             background: #fff;
         }
 
-        /* Định dạng chung cho text hiển thị và textarea */
         .text-field {
             font-family: inherit;
             font-size: 16px;
@@ -179,15 +112,12 @@
             display: inline-block;
         }
 
-        /* Đảm bảo không bị tràn viền */
-        .display-field,
-        .edit-field {
+        .display-field, .edit-field {
             box-sizing: border-box;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
 
-        /* Phần tóm tắt nội dung: màu đỏ, không bold */
         .summary-text {
             color: rgb(44, 149, 219);
             font-weight: normal;
@@ -196,11 +126,8 @@
         .main-display {
             white-space: pre-wrap;
             line-height: 2;
-
         }
 
-
-        /* Phần nội dung chính: màu đen, không bold, thụt vào */
         .main-text {
             color: black;
             font-weight: normal;
@@ -244,15 +171,12 @@
             order: 1;
             display: inline-block;
             width: 30px;
-            /* Điều chỉnh theo nhu cầu */
             text-align: right;
             margin-right: 10px;
             color: rgb(205, 229, 235);
             font-weight: bold;
             font-size: 25px;
-            /* thay đổi kích thước font */
             font-family: 'courier new';
-            /* thay đổi font, ví dụ Arial */
             cursor: pointer;
         }
 
@@ -276,6 +200,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        let currentStory = "story1"; // Truyện hiện tại
 
         // Cập nhật dropdown cho lựa chọn phạm vi đọc
         function updateDropdowns() {
@@ -294,6 +219,20 @@
             }
         }
 
+        // Cập nhật dropdown cho danh sách truyện
+        function updateStoryDropdown() {
+            const storySelect = document.getElementById("storySelect");
+            storySelect.innerHTML = "";
+            const stories = ["story1", "story2", "story3"]; // Có thể mở rộng hoặc lấy từ Firebase
+            stories.forEach(story => {
+                const option = document.createElement("option");
+                option.value = story;
+                option.textContent = story.charAt(0).toUpperCase() + story.slice(1);
+                storySelect.appendChild(option);
+            });
+            storySelect.value = currentStory;
+        }
+
         // Thêm một content-item mới
         window.addContent = function () {
             const contentList = document.getElementById("contentList");
@@ -301,40 +240,36 @@
             const contentItem = document.createElement("div");
             contentItem.className = "content-item";
             contentItem.innerHTML = `
-   
-        <div class="summary-container">
-        <span class="numbering" onclick="copySummary(this)" ondblclick="deleteContentItem(this)">${index}</span>
-        <span class="display-field text-field summary-display summary-text" 
-                ondblclick="enterEdit(this, 'summary')" 
-                onclick="toggleMain(this)">
-            [Nhấn vào đây để xem chi tiết] 
-        </span>
-
-          <textarea class="edit-field text-field summary-edit summary-text" style="display:none;" 
-                    onblur="exitEdit(this, 'summary')" 
-                    oninput="autoResize(this)"></textarea>
-        </div>
-        
-        <div class="main-container" style="display: none;">
-          <span class="display-field text-field main-display main-text" 
-                ondblclick="enterEdit(this, 'main')">
-            [Nội dung chính trống]
-          </span>
-          <textarea class="edit-field text-field main-edit main-text" style="display:none;" 
-                    onblur="exitEdit(this, 'main')" 
-                    oninput="autoResize(this)"></textarea>
-        </div>
-      `;
+                <div class="summary-container">
+                    <span class="numbering" onclick="copySummary(this)" ondblclick="deleteContentItem(this)">${index}</span>
+                    <span class="display-field text-field summary-display summary-text" 
+                          ondblclick="enterEdit(this, 'summary')" 
+                          onclick="toggleMain(this)">
+                        [Nhấn vào đây để xem chi tiết] 
+                    </span>
+                    <textarea class="edit-field text-field summary-edit summary-text" style="display:none;" 
+                              onblur="exitEdit(this, 'summary')" 
+                              oninput="autoResize(this)"></textarea>
+                </div>
+                <div class="main-container" style="display: none;">
+                    <span class="display-field text-field main-display main-text" 
+                          ondblclick="enterEdit(this, 'main')">
+                        [Nội dung chính trống]
+                    </span>
+                    <textarea class="edit-field text-field main-edit main-text" style="display:none;" 
+                              onblur="exitEdit(this, 'main')" 
+                              oninput="autoResize(this)"></textarea>
+                </div>
+            `;
             contentList.appendChild(contentItem);
             updateDropdowns();
-            saveToFirebase()
+            saveToFirebase();
         };
 
-        // Chuyển sang chế độ chỉnh sửa khi nhấn đúp vào vùng hiển thị
+        // Chuyển sang chế độ chỉnh sửa
         window.enterEdit = function (displayElem, field) {
             const contentItem = displayElem.closest(".content-item");
             const editElem = contentItem.querySelector(`.${field}-edit`);
-            // Đưa nội dung từ display vào textarea (nếu placeholder thì set rỗng)
             editElem.value = (displayElem.textContent.includes("[") && displayElem.textContent.includes("]"))
                 ? ""
                 : displayElem.textContent;
@@ -344,7 +279,7 @@
             autoResize(editElem);
         };
 
-        // Thoát chế độ chỉnh sửa khi mất focus, lưu nội dung vừa chỉnh sửa
+        // Thoát chế độ chỉnh sửa
         window.exitEdit = async function (editElem, field) {
             const contentItem = editElem.closest(".content-item");
             const displayElem = contentItem.querySelector(`.${field}-display`);
@@ -355,36 +290,24 @@
                     : "[Nội dung chính trống]";
             }
             displayElem.textContent = newValue;
-            await saveToFirebase()
+            await saveToFirebase();
             editElem.style.display = "none";
             displayElem.style.display = "inline-block";
         };
 
-        // Tự động điều chỉnh chiều cao của textarea theo nội dung
+        // Tự động điều chỉnh chiều cao textarea
         window.autoResize = function (element) {
             element.style.height = "auto";
             element.style.height = (element.scrollHeight) + "px";
         };
 
-        // Toggle hiển thị phần "Nội dung chính" khi nhấp vào vùng tóm tắt
+        // Toggle hiển thị "Nội dung chính"
         window.toggleMain = function (summaryElem) {
             const contentItem = summaryElem.closest(".content-item");
             const mainContainer = contentItem.querySelector(".main-container");
-            if (mainContainer.style.display === "none" || mainContainer.style.display === "") {
-                mainContainer.style.display = "block";
-            } else {
-                mainContainer.style.display = "none";
-            }
+            mainContainer.style.display = (mainContainer.style.display === "none" || mainContainer.style.display === "") ? "block" : "none";
         };
-        let isReading = false;
 
-        function toggleSound() {
-            if (!isReading) {
-                readAll();
-            } else {
-                stopReading();
-            }
-        }
         // Đọc nội dung đã chọn
         window.readAll = function () {
             const start = parseInt(document.getElementById("startRead").value);
@@ -427,14 +350,45 @@
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
                 button.classList.remove("active");
-
             } else {
                 readAll();
                 button.classList.add("active");
-
             }
         };
 
+        // Copy tất cả summaries
+        window.copyAllSummaries = function () {
+            const contentList = document.getElementById("contentList").children;
+            let allSummaries = "";
+            for (let i = 0; i < contentList.length; i++) {
+                const summaryDisplay = contentList[i].querySelector(".summary-display");
+                const text = summaryDisplay.textContent.includes("[") ? "" : summaryDisplay.textContent;
+                allSummaries += text + "\n";
+            }
+            navigator.clipboard.writeText(allSummaries).then(() => {
+                showToast("Đã copy tất cả summaries!");
+            }).catch(err => {
+                console.error("Lỗi khi copy: ", err);
+                showToast("Lỗi khi copy tất cả summaries!");
+            });
+        };
+
+        // Copy tất cả main contents
+        window.copyAllMainContents = function () {
+            const contentList = document.getElementById("contentList").children;
+            let allMainContents = "";
+            for (let i = 0; i < contentList.length; i++) {
+                const mainDisplay = contentList[i].querySelector(".main-display");
+                const text = mainDisplay.textContent.includes("[") ? "" : mainDisplay.textContent;
+                allMainContents += text + "\n";
+            }
+            navigator.clipboard.writeText(allMainContents).then(() => {
+                showToast("Đã copy tất cả main contents!");
+            }).catch(err => {
+                console.error("Lỗi khi copy: ", err);
+                showToast("Lỗi khi copy tất cả main contents!");
+            });
+        };
 
         // Lưu nội dung vào Firebase
         window.saveToFirebase = async function () {
@@ -456,46 +410,44 @@
             }
 
             try {
-                await setDoc(doc(db, "stories", "chapter1"), { contents: stories });
-                try {
-                    await setDoc(doc(db, "stories", "chapter1"), { contents: stories });
-                    showToast("Saved!");
-                } catch (error) {
-                    console.error("Error saving data:", error);
-                    showToast("Có lỗi khi lưu dữ liệu!");
-                }
-
+                await setDoc(doc(db, "stories", currentStory), { contents: stories });
+                showToast("Saved!");
             } catch (error) {
                 console.error("Error saving data:", error);
-                alert("Có lỗi khi lưu dữ liệu!");
+                showToast("Có lỗi khi lưu dữ liệu!");
             }
         };
 
-        // Tải nội dung từ Firebase và hiển thị lại
+        // Tải nội dung từ Firebase
         window.loadFromFirebase = async function () {
             try {
-                const docRef = doc(db, "stories", "chapter1");
+                const docRef = doc(db, "stories", currentStory);
                 const docSnap = await getDoc(docRef);
+                document.getElementById("contentList").innerHTML = "";
                 if (docSnap.exists()) {
-                    document.getElementById("contentList").innerHTML = "";
                     docSnap.data().contents.forEach((item) => {
                         addContent();
                         const contentItem = document.getElementById("contentList").lastChild;
                         contentItem.querySelector(".summary-display").textContent = item.summary || "[Nhấn vào đây để xem chi tiết]";
                         contentItem.querySelector(".main-display").textContent = item.content || "[Nội dung chính trống]";
                     });
-                    updateDropdowns();
-                } else {
-                    console.log("No data found!");
                 }
+                updateDropdowns();
             } catch (error) {
                 console.error("Error loading data:", error);
-                alert("Có lỗi khi tải dữ liệu!");
+                showToast("Có lỗi khi tải dữ liệu!");
             }
+        };
+
+        // Chuyển đổi truyện
+        window.changeStory = function () {
+            currentStory = document.getElementById("storySelect").value;
+            loadFromFirebase();
         };
 
         // Tự động tải dữ liệu khi trang được load
         document.addEventListener("DOMContentLoaded", function () {
+            updateStoryDropdown();
             loadFromFirebase();
         });
 
@@ -503,98 +455,58 @@
             const toast = document.getElementById("toast");
             toast.textContent = message;
             toast.style.display = "block";
-            // Ẩn toast sau 3 giây
-            setTimeout(() => {
-                toast.style.display = "none";
-            }, 1000);
+            setTimeout(() => toast.style.display = "none", 1000);
         }
-
-
 
         window.copySummary = function (numberingElem) {
             const contentItem = numberingElem.closest(".content-item");
             const summaryDisplay = contentItem.querySelector(".summary-display");
-            const textToCopy = summaryDisplay.textContent.trim();  // Lấy nội dung văn bản để copy
-
-            // Sử dụng Clipboard API để sao chép văn bản
+            const textToCopy = summaryDisplay.textContent.trim();
             navigator.clipboard.writeText(textToCopy)
-                .then(() => {
-                    showToast("Đã copy nội dung summary!");  // Thông báo thành công
-                })
+                .then(() => showToast("Đã copy nội dung summary!"))
                 .catch(err => {
-                    console.error("Lỗi khi copy: ", err);  // Xử lý lỗi
+                    console.error("Lỗi khi copy: ", err);
                     showToast("Lỗi khi copy nội dung!");
                 });
         };
 
-
         window.deleteContentItem = function (numberingElem) {
-            // Xác nhận người dùng có muốn xóa không (có thể bỏ qua bước này nếu không cần)
             if (!confirm("Bạn có chắc muốn xóa phần này không?")) return;
-
-            // Lấy phần tử content-item chứa số thứ tự vừa nhấn đúp
             const contentItem = numberingElem.closest(".content-item");
-            if (contentItem) {
-                contentItem.remove();
-            }
-            // Cập nhật lại số thứ tự cho các phần tử còn lại
+            if (contentItem) contentItem.remove();
             updateNumbering();
-            // Cập nhật dropdown nếu cần
             updateDropdowns();
+            saveToFirebase();
         };
-
 
         window.updateNumbering = function () {
             const contentItems = document.querySelectorAll(".content-item");
             contentItems.forEach((item, index) => {
                 const numbering = item.querySelector(".numbering");
-                if (numbering) {
-                    numbering.textContent = (index + 1) + ".";
-                    saveToFirebase()
-                }
+                if (numbering) numbering.textContent = (index + 1) + ".";
             });
         };
 
-        function copySummary(numberingElem) {
-            const contentItem = numberingElem.closest(".content-item");
-            // Lấy nội dung summary (bỏ qua các thẻ HTML nếu có)
-            const summaryText = contentItem.querySelector(".summary-display").textContent.trim();
-            navigator.clipboard.writeText(summaryText)
-                .then(() => {
-                    showToast("Đã copy nội dung summary!");
-                })
-                .catch(err => {
-                    console.error("Lỗi khi copy: ", err);
-                });
-        }
-
-        window.addEventListener('beforeunload', function (event) {
-            // Dừng mọi hoạt động tổng hợp giọng nói
+        window.addEventListener('beforeunload', function () {
             window.speechSynthesis.cancel();
         });
-
-
     </script>
 </head>
-
 <body>
-
     <div class="toolbar">
+        <label>Truyện: <select id="storySelect" onchange="changeStory()"></select></label>
         <label>Chương: <select id="chapterSelect"></select></label>
         <button onclick="saveToFirebase()" class="save-button">💾</button>
         <button onclick="toggleSound()" class="sound-toggle">💬</button>
-
         <select id="startRead"></select>
         <span>-</span>
         <select id="endRead"></select>
+        <button onclick="copyAllSummaries()" class="toolbar-button">Copy All Summaries</button>
+        <button onclick="copyAllMainContents()" class="toolbar-button">Copy All Main</button>
     </div>
 
-    <div id="toast">
-    </div>
-
+    <div id="toast"></div>
     <div class="content-container" id="contentList"></div>
     <button onclick="addContent()">+</button>
-
 </body>
-
 </html>
