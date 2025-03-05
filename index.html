@@ -88,8 +88,47 @@
             padding: 5px;
         }
 
-        .content-container {
+        .chapter-summary-container {
             margin-top: 60px;
+            padding: 10px;
+            width: 95%;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #ffcccc;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+
+        .chapter-summary-text {
+            width: 100%;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            text-align: justify;
+        }
+
+        #chapterSummaryDisplay {
+            padding: 5px;
+            min-height: 40px;
+            white-space: pre-wrap;
+        }
+
+        #chapterSummaryDisplay:hover {
+            background: #ffe6e6;
+            cursor: pointer;
+        }
+
+        #chapterSummaryEdit {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            resize: none;
+            overflow: hidden;
+            min-height: 40px;
+            border: 1px solid #ddd;
+        }
+
+        .content-container {
+            margin-top: 10px;
             padding: 10px;
             width: 95%;
             margin-left: auto;
@@ -187,7 +226,7 @@
     </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDA1nw4icbTTk4XMnGMbTvE7gm0_jqDpvs",
@@ -200,7 +239,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        let currentStory = "story1"; // Truyện hiện tại
+        let currentStory = "story1";
+        let currentChapter = "chapter1";
 
         // Cập nhật dropdown cho lựa chọn phạm vi đọc
         function updateDropdowns() {
@@ -220,17 +260,52 @@
         }
 
         // Cập nhật dropdown cho danh sách truyện
-        function updateStoryDropdown() {
+        async function updateStoryDropdown() {
             const storySelect = document.getElementById("storySelect");
             storySelect.innerHTML = "";
-            const stories = ["story1", "story2", "story3"]; // Có thể mở rộng hoặc lấy từ Firebase
+            const querySnapshot = await getDocs(collection(db, "stories"));
+            const stories = new Set();
+            querySnapshot.forEach(doc => {
+                const storyId = doc.id.split("_")[0];
+                stories.add(storyId);
+            });
             stories.forEach(story => {
                 const option = document.createElement("option");
                 option.value = story;
                 option.textContent = story.charAt(0).toUpperCase() + story.slice(1);
                 storySelect.appendChild(option);
             });
+            const newStoryOption = document.createElement("option");
+            newStoryOption.value = "newStory";
+            newStoryOption.textContent = "Tạo Story mới";
+            storySelect.appendChild(newStoryOption);
             storySelect.value = currentStory;
+        }
+
+        // Cập nhật dropdown cho danh sách chương
+        async function updateChapterDropdown() {
+            const chapterSelect = document.getElementById("chapterSelect");
+            chapterSelect.innerHTML = "";
+            const querySnapshot = await getDocs(collection(db, "stories"));
+            const chapters = [];
+            querySnapshot.forEach(doc => {
+                const [story, chapter] = doc.id.split("_");
+                if (story === currentStory && chapter) {
+                    chapters.push(chapter);
+                }
+            });
+            chapters.sort();
+            chapters.forEach(chapter => {
+                const option = document.createElement("option");
+                option.value = chapter;
+                option.textContent = chapter.charAt(0).toUpperCase() + chapter.slice(1);
+                chapterSelect.appendChild(option);
+            });
+            const newChapterOption = document.createElement("option");
+            newChapterOption.value = "newChapter";
+            newChapterOption.textContent = "Tạo Chương mới";
+            chapterSelect.appendChild(newChapterOption);
+            chapterSelect.value = currentChapter;
         }
 
         // Thêm một content-item mới
@@ -266,33 +341,46 @@
             saveToFirebase();
         };
 
-        // Chuyển sang chế độ chỉnh sửa
+        // Chuyển sang chế độ chỉnh sửa cho content
         window.enterEdit = function (displayElem, field) {
             const contentItem = displayElem.closest(".content-item");
             const editElem = contentItem.querySelector(`.${field}-edit`);
-            editElem.value = (displayElem.textContent.includes("[") && displayElem.textContent.includes("]"))
-                ? ""
-                : displayElem.textContent;
+            editElem.value = displayElem.textContent.trim();
             displayElem.style.display = "none";
             editElem.style.display = "block";
             editElem.focus();
             autoResize(editElem);
         };
 
-        // Thoát chế độ chỉnh sửa
+        // Thoát chế độ chỉnh sửa cho content
         window.exitEdit = async function (editElem, field) {
             const contentItem = editElem.closest(".content-item");
             const displayElem = contentItem.querySelector(`.${field}-display`);
-            let newValue = editElem.value.trim();
-            if (newValue === "") {
-                newValue = field === 'summary'
-                    ? "[Nhấn vào đây để xem chi tiết]"
-                    : "[Nội dung chính trống]";
-            }
-            displayElem.textContent = newValue;
+            const newValue = editElem.value.trim();
+            displayElem.textContent = newValue || (field === 'summary' ? "[Nhấn vào đây để xem chi tiết]" : "[Nội dung chính trống]");
             await saveToFirebase();
             editElem.style.display = "none";
             displayElem.style.display = "inline-block";
+        };
+
+        // Chuyển sang chế độ chỉnh sửa cho tóm tắt chương
+        window.enterChapterSummaryEdit = function (displayElem) {
+            const editElem = document.getElementById("chapterSummaryEdit");
+            editElem.value = displayElem.textContent.trim();
+            displayElem.style.display = "none";
+            editElem.style.display = "block";
+            editElem.focus();
+            autoResize(editElem);
+        };
+
+        // Thoát chế độ chỉnh sửa cho tóm tắt chương
+        window.exitChapterSummaryEdit = async function (editElem) {
+            const displayElem = document.getElementById("chapterSummaryDisplay");
+            const newValue = editElem.value.trim();
+            displayElem.textContent = newValue || "[Tóm tắt chương trống]";
+            await saveToFirebase();
+            editElem.style.display = "none";
+            displayElem.style.display = "block";
         };
 
         // Tự động điều chỉnh chiều cao textarea
@@ -362,8 +450,7 @@
             let allSummaries = "";
             for (let i = 0; i < contentList.length; i++) {
                 const summaryDisplay = contentList[i].querySelector(".summary-display");
-                const text = summaryDisplay.textContent.includes("[") ? "" : summaryDisplay.textContent;
-                allSummaries += text + "\n";
+                allSummaries += summaryDisplay.textContent.trim() + "\n";
             }
             navigator.clipboard.writeText(allSummaries).then(() => {
                 showToast("Đã copy tất cả summaries!");
@@ -379,8 +466,7 @@
             let allMainContents = "";
             for (let i = 0; i < contentList.length; i++) {
                 const mainDisplay = contentList[i].querySelector(".main-display");
-                const text = mainDisplay.textContent.includes("[") ? "" : mainDisplay.textContent;
-                allMainContents += text + "\n";
+                allMainContents += mainDisplay.textContent.trim() + "\n";
             }
             navigator.clipboard.writeText(allMainContents).then(() => {
                 showToast("Đã copy tất cả main contents!");
@@ -394,23 +480,23 @@
         window.saveToFirebase = async function () {
             const contentList = document.getElementById("contentList").children;
             const stories = [];
+            const chapterSummary = document.getElementById("chapterSummaryDisplay").textContent.trim();
 
             for (let i = 0; i < contentList.length; i++) {
                 const summaryDisplay = contentList[i].querySelector(".summary-display");
                 const mainDisplay = contentList[i].querySelector(".main-display");
                 stories.push({
                     id: i + 1,
-                    summary: (summaryDisplay.textContent.includes("[") && summaryDisplay.textContent.includes("]"))
-                        ? ""
-                        : summaryDisplay.textContent,
-                    content: (mainDisplay.textContent.includes("[") && mainDisplay.textContent.includes("]"))
-                        ? ""
-                        : mainDisplay.textContent
+                    summary: summaryDisplay.textContent.trim(),
+                    content: mainDisplay.textContent.trim()
                 });
             }
 
             try {
-                await setDoc(doc(db, "stories", currentStory), { contents: stories });
+                await setDoc(doc(db, "stories", `${currentStory}_${currentChapter}`), {
+                    contents: stories,
+                    chapterSummary: chapterSummary
+                });
                 showToast("Saved!");
             } catch (error) {
                 console.error("Error saving data:", error);
@@ -421,16 +507,25 @@
         // Tải nội dung từ Firebase
         window.loadFromFirebase = async function () {
             try {
-                const docRef = doc(db, "stories", currentStory);
+                const docRef = doc(db, "stories", `${currentStory}_${currentChapter}`);
                 const docSnap = await getDoc(docRef);
                 document.getElementById("contentList").innerHTML = "";
                 if (docSnap.exists()) {
-                    docSnap.data().contents.forEach((item) => {
-                        addContent();
-                        const contentItem = document.getElementById("contentList").lastChild;
-                        contentItem.querySelector(".summary-display").textContent = item.summary || "[Nhấn vào đây để xem chi tiết]";
-                        contentItem.querySelector(".main-display").textContent = item.content || "[Nội dung chính trống]";
-                    });
+                    const data = docSnap.data();
+                    document.getElementById("chapterSummaryDisplay").textContent = 
+                        data.chapterSummary || "[Tóm tắt chương trống]";
+                    if (data.contents) {
+                        data.contents.forEach((item) => {
+                            addContent();
+                            const contentItem = document.getElementById("contentList").lastChild;
+                            contentItem.querySelector(".summary-display").textContent = 
+                                item.summary || "[Nhấn vào đây để xem chi tiết]";
+                            contentItem.querySelector(".main-display").textContent = 
+                                item.content || "[Nội dung chính trống]";
+                        });
+                    }
+                } else {
+                    document.getElementById("chapterSummaryDisplay").textContent = "[Tóm tắt chương trống]";
                 }
                 updateDropdowns();
             } catch (error) {
@@ -440,15 +535,78 @@
         };
 
         // Chuyển đổi truyện
-        window.changeStory = function () {
-            currentStory = document.getElementById("storySelect").value;
-            loadFromFirebase();
+        window.changeStory = async function () {
+            const storySelect = document.getElementById("storySelect").value;
+            if (storySelect === "newStory") {
+                await createNewStory();
+            } else {
+                currentStory = storySelect;
+                currentChapter = "chapter1";
+                await updateChapterDropdown();
+                await loadFromFirebase();
+            }
+        };
+
+        // Chuyển đổi chương
+        window.changeChapter = async function () {
+            const chapterSelect = document.getElementById("chapterSelect").value;
+            if (chapterSelect === "newChapter") {
+                await createNewChapter();
+            } else {
+                currentChapter = chapterSelect;
+                await loadFromFirebase();
+            }
+        };
+
+        // Tạo Story mới
+        window.createNewStory = async function () {
+            const querySnapshot = await getDocs(collection(db, "stories"));
+            const stories = new Set();
+            querySnapshot.forEach(doc => {
+                const storyId = doc.id.split("_")[0];
+                stories.add(storyId);
+            });
+            const newStoryNum = stories.size + 1;
+            const newStoryId = `story${newStoryNum}`;
+            currentStory = newStoryId;
+            currentChapter = "chapter1";
+            document.getElementById("contentList").innerHTML = "";
+            document.getElementById("chapterSummaryDisplay").textContent = "[Tóm tắt chương trống]";
+            await saveToFirebase();
+            await updateStoryDropdown();
+            await updateChapterDropdown();
+            document.getElementById("storySelect").value = newStoryId;
+            await loadFromFirebase();
+            showToast(`Đã tạo ${newStoryId}!`);
+        };
+
+        // Tạo Chương mới
+        window.createNewChapter = async function () {
+            const querySnapshot = await getDocs(collection(db, "stories"));
+            const chapters = [];
+            querySnapshot.forEach(doc => {
+                const [story, chapter] = doc.id.split("_");
+                if (story === currentStory && chapter) {
+                    chapters.push(chapter);
+                }
+            });
+            const newChapterNum = chapters.length + 1;
+            const newChapterId = `chapter${newChapterNum}`;
+            currentChapter = newChapterId;
+            document.getElementById("contentList").innerHTML = "";
+            document.getElementById("chapterSummaryDisplay").textContent = "[Tóm tắt chương trống]";
+            await saveToFirebase();
+            await updateChapterDropdown();
+            document.getElementById("chapterSelect").value = newChapterId;
+            await loadFromFirebase();
+            showToast(`Đã tạo ${newChapterId} trong ${currentStory}!`);
         };
 
         // Tự động tải dữ liệu khi trang được load
-        document.addEventListener("DOMContentLoaded", function () {
-            updateStoryDropdown();
-            loadFromFirebase();
+        document.addEventListener("DOMContentLoaded", async function () {
+            await updateStoryDropdown();
+            await updateChapterDropdown();
+            await loadFromFirebase();
         });
 
         function showToast(message) {
@@ -495,7 +653,7 @@
 <body>
     <div class="toolbar">
         <label>Truyện: <select id="storySelect" onchange="changeStory()"></select></label>
-        <label>Chương: <select id="chapterSelect"></select></label>
+        <label>Chương: <select id="chapterSelect" onchange="changeChapter()"></select></label>
         <button onclick="saveToFirebase()" class="save-button">💾</button>
         <button onclick="toggleSound()" class="sound-toggle">💬</button>
         <select id="startRead"></select>
@@ -505,6 +663,13 @@
         <button onclick="copyAllMainContents()" class="toolbar-button">Copy All Main</button>
     </div>
 
+
+    <div class="chapter-summary-container">
+        <span id="chapterSummaryDisplay" class="display-field chapter-summary-text" ondblclick="enterChapterSummaryEdit(this)">
+            [Tóm tắt chương trống]
+        </span>
+        <textarea id="chapterSummaryEdit" class="edit-field chapter-summary-text" style="display:none;" onblur="exitChapterSummaryEdit(this)" oninput="autoResize(this)"></textarea>
+    </div>
     <div id="toast"></div>
     <div class="content-container" id="contentList"></div>
     <button onclick="addContent()">+</button>
